@@ -15,7 +15,7 @@ import HeaderHome from "./components/HeaderHome.vue"
 export default {
   data() {
     return {
-      baseURL: "http://localhost:8000/",
+      baseURL: "http://107.23.143.171:8080/",
       products: null,
       categories: null
     }

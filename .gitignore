@@ -9,3 +9,4 @@ pom.xml.versions
 /node_modules
 /dist
 .DS_Store
+frontend/fe-ecommerce/node_modules/
