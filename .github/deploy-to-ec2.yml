@@ -59,7 +59,6 @@ jobs:
             docker build -t ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
             docker push ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
         
-        
         - name: Build and Push Frontend Image to ECR
           working-directory: fe-core/ecommerce
           run: |
