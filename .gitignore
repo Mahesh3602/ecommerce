@@ -1,0 +1,11 @@
+# Example minimal .gitignore content
+/target/
+*.jar
+*.war
+# Maven
+pom.xml.tag
+pom.xml.versions
+# Frontend
+/node_modules
+/dist
+.DS_Store
