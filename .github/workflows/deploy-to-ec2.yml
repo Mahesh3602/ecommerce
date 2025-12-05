@@ -1,21 +1,11 @@
-name: Deploy to EC2
-on:
-  push:
-    branches:
-      - main
-
-env:
-  AWS_REGION: us-east-1
-  BACKEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/backend
-  FRONTEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/frontend
-
 jobs:
     build_and_push:
       runs-on: ubuntu-latest
       name: Build and Push Docker Images to ECR
       environment: prod
+      # The outputs section must reference the step ID 'tag'
       outputs:
-        new-image-tag: ${{ steps.build-and-push.outputs.new-image-tag }}
+        new-image-tag: ${{ steps.tag.outputs.new-image-tag }} 
 
       steps:
         - name: Checkout repo 
@@ -29,8 +19,7 @@ jobs:
             aws-region: ${{ env.AWS_REGION }}
 
         - name: Login to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
+          uses: aws-actions/amazon-ecr-login@v2 # Use the latest v2 action
 
         - name: Set up jdk 17
           uses: actions/setup-java@v4
@@ -38,30 +27,39 @@ jobs:
             distribution: 'temurin'
             java-version: '17'
         
-        - name: Build jar with Maven
+        - name: Build backend JAR with Maven (Skipping Tests)
           working-directory: backend/ecommerce
           run: ./mvnw clean package -DskipTests
+          
+        - name: Set up Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: '20' # Use a modern version for Vue
 
-        - name: login to ECR
-          uses: aws-actions/amazon-ecr-login@v2
-  
-
-        - name: determine new image tag (short SHA)
+        - name: Build frontend assets
+          working-directory: frontend/fe-ecommerce
+          run: |
+            npm install
+            npm run build
+        
+        - name: Determine new image tag (short SHA)
           id: tag
           run: |
-            new_tag=$(echo "${GITHUB_SHA}" | head -c 7)
-            echo "new-image-tag=$new_tag" >> $GITHUB_OUTPUT
-            echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+            new_tag=$(echo "${{ github.sha }}" | head -c 7)
+            echo "new-image-tag=$new_tag" >> $GITHUB_OUTPUT # Correct format for outputs
+            echo "NEW_TAG=$new_tag" >> $GITHUB_ENV           # Correct format for environment variable
         
         - name: Build and Push Backend Image to ECR
           working-directory: backend/ecommerce
           run: |
-            docker build -t ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
-            docker push ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
+            # Use the full ECR URI and the NEW_TAG environment variable
+            docker build -t ${{ env.BACKEND_ECR_REPO }}:${{ env.NEW_TAG }} .
+            docker push ${{ env.BACKEND_ECR_REPO }}:${{ env.NEW_TAG }}
         
         - name: Build and Push Frontend Image to ECR
           working-directory: frontend/fe-ecommerce
           run: |
-            docker build -t ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
-            docker push ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
-        
+            # Use the full ECR URI and the NEW_TAG environment variable
+            # We don't need to rebuild frontend assets in the container, as they were built above.
+            docker build -t ${{ env.FRONTEND_ECR_REPO }}:${{ env.NEW_TAG }} .
+            docker push ${{ env.FRONTEND_ECR_REPO }}:${{ env.NEW_TAG }}

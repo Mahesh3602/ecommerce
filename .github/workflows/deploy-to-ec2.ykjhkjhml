@@ -1,0 +1,67 @@
+name: Deploy to EC2
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  BACKEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/backend
+  FRONTEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/frontend
+
+jobs:
+    build_and_push:
+      runs-on: ubuntu-latest
+      name: Build and Push Docker Images to ECR
+      environment: prod
+      outputs:
+        new-image-tag: ${{ steps.build-and-push.outputs.new-image-tag }}
+
+      steps:
+        - name: Checkout repo 
+          uses: actions/checkout@v3
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ env.AWS_REGION }}
+
+        - name: Login to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+
+        - name: Set up jdk 17
+          uses: actions/setup-java@v4
+          with:
+            distribution: 'temurin'
+            java-version: '17'
+        
+        - name: Build jar with Maven
+          working-directory: backend/ecommerce
+          run: ./mvnw clean package -DskipTests
+
+        - name: login to ECR
+          uses: aws-actions/amazon-ecr-login@v2
+  
+
+        - name: determine new image tag (short SHA)
+          id: tag
+          run: |
+            new_tag=$(echo "${GITHUB_SHA}" | head -c 7)
+            echo "new-image-tag=$new_tag" >> $GITHUB_OUTPUT
+            echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+        
+        - name: Build and Push Backend Image to ECR
+          working-directory: backend/ecommerce
+          run: |
+            docker build -t ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
+            docker push ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
+        
+        - name: Build and Push Frontend Image to ECR
+          working-directory: frontend/fe-ecommerce
+          run: |
+            docker build -t ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
+            docker push ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
+        
