@@ -49,7 +49,7 @@ import axios from 'axios';
          imageUrl : this.imageURL,
        };
        
-       const baseURL = "http://localhost:8080/";
+       const baseURL = "http://107.23.143.171:8080/";
 
        await axios({
          method: 'post',

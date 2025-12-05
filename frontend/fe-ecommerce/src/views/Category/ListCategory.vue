@@ -28,7 +28,7 @@
         name: 'CategoryList',
         data() {
             return {
-                baseURL :  "http://localhost:8000/",
+                baseURL :  "http://107.23.143.171:8080/",
                 categories : null,
             }
         },
