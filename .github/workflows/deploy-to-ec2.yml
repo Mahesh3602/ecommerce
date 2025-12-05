@@ -39,7 +39,7 @@ jobs:
             java-version: '17'
         
         - name: Build jar with Maven
-          working-directory: be-core/ecommerce
+          working-directory: backend/ecommerce
           run: ./mvnw clean package -DskipTests
 
         - name: login to ECR
