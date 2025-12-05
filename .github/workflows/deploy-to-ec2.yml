@@ -54,13 +54,13 @@ jobs:
             echo "New image tag: $new_tag" >> $GITHUB_ENV
         
         - name: Build and Push Backend Image to ECR
-          working-directory: be-core/ecommerce
+          working-directory: backend
           run: |
             docker build -t ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
             docker push ${{ env.BACKEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
         
         - name: Build and Push Frontend Image to ECR
-          working-directory: fe-core/ecommerce
+          working-directory: frontend/ecommerce
           run: |
             docker build -t ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }} .
             docker push ${{ env.FRONTEND_ECR_REPO }}:${{ steps.tag.outputs.new-image-tag }}
