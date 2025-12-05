@@ -51,7 +51,7 @@ jobs:
           run: |
             new_tag=$(echo "${GITHUB_SHA}" | head -c 7)
             echo "new-image-tag=$new_tag" >> $GITHUB_OUTPUT
-            echo "New image tag: $new_tag" >> $GITHUB_ENV
+            echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
         
         - name: Build and Push Backend Image to ECR
           working-directory: backend/ecommerce
