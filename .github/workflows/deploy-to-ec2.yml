@@ -1,3 +1,14 @@
+name: Deploy to EC2
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  BACKEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/backend
+  FRONTEND_ECR_REPO: 564398349829.dkr.ecr.us-east-1.amazonaws.com/ecommerce/frontend
+
 jobs:
     build_and_push:
       runs-on: ubuntu-latest
